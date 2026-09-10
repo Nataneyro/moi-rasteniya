@@ -1,0 +1,83 @@
+{
+  "app": {
+    "title": "Мои растения",
+    "defaultInterval": 12,
+    "hero": "hero.jpg",
+    "heroFocus": "50% 42%",
+    "heroAlt": "Замиокулькас в белом кашпо"
+  },
+  "plants": [
+    {
+      "id": "zamik",
+      "name": "Замик",
+      "interval": 14,
+      "note": "",
+      "icon": "🌿",
+      "tint": "green"
+    },
+    {
+      "id": "aloe",
+      "name": "Алоэ",
+      "interval": 14,
+      "note": "",
+      "icon": "🪴",
+      "tint": "mint"
+    },
+    {
+      "id": "krassula",
+      "name": "Денежное дерево",
+      "interval": 12,
+      "note": "",
+      "icon": "🌳",
+      "tint": "clay"
+    },
+    {
+      "id": "chlorophytum",
+      "name": "Хлорофитум",
+      "interval": 10,
+      "note": "",
+      "icon": "🌾",
+      "tint": "sand"
+    }
+  ],
+  "fertilizers": [
+    {
+      "name": "Монофосфат + аминоцимус",
+      "ingredients": "",
+      "dose": ""
+    },
+    {
+      "name": "Благо",
+      "ingredients": "",
+      "dose": ""
+    },
+    {
+      "name": "Акварин + аминоцимус",
+      "ingredients": "",
+      "dose": ""
+    },
+    {
+      "name": "Гумат",
+      "ingredients": "",
+      "dose": ""
+    },
+    {
+      "name": "Коктейль для активного роста",
+      "ingredients": "",
+      "dose": ""
+    }
+  ],
+  "texts": {
+    "dueToday": "Сегодня полить:",
+    "allWatered": "Все политы.",
+    "nextWater": "Ближайший полив через",
+    "emptyPlants": "Пока пусто. Добавь первое растение.",
+    "emptyLog": "Записей пока нет. Отметь первый полив.",
+    "neverWatered": "полива ещё не было",
+    "dueBadge": "пора полить",
+    "tomorrowBadge": "полить завтра",
+    "weekTitle": "Полив · неделя",
+    "monthTitle": "Этот месяц",
+    "plantsTitle": "Растения"
+  }
+}
