@@ -95,10 +95,7 @@ h1{font:400 30px/1.15 Georgia,"Times New Roman",serif;margin:5px 0 14px}
 .quick.done{background:var(--sage);color:#fff}
 
 /* ---------- неделя ---------- */
-.week{
-  display:flex;justify-content:space-between;background:var(--card);
-  border:1px solid var(--line);border-radius:var(--r);padding:14px 12px;
-}
+
 .day{text-align:center;font-size:11px;color:var(--muted)}
 .day b{
   display:grid;place-items:center;width:32px;height:32px;border-radius:50%;
@@ -133,6 +130,11 @@ button{font-family:inherit;font-size:15px;cursor:pointer}
 .screen.open{display:block}
 .back{background:none;border:none;color:var(--sage-deep);padding:20px 0 8px;font-size:15px}
 .plant-head{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+.plant-head.tappable{cursor:pointer}
+.plant-head.tappable .big{color:var(--sage-deep)}
+.plant-head.tappable:active{opacity:.7}
+.head-hint{display:none;font-size:12.5px;color:var(--sage);margin-top:4px}
+.plant-head.tappable .head-hint{display:block}
 .plant-head .tile{width:62px;height:62px;border-radius:20px;font-size:30px}
 .big{font:400 30px/1.1 Georgia,"Times New Roman",serif;margin:0 0 3px}
 .sub{color:var(--muted);font-size:14px}
@@ -192,6 +194,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 .plan .pl-body{flex:1;min-width:0}
 .plan .pl-name{font-size:15px}
 .plan .pl-when{font-size:12.5px;color:var(--muted);margin-top:2px}
+.plan .pl-ingr{display:block;font-size:12.5px;color:var(--clay);margin-top:3px}
 .plan .pl-when.due{color:var(--amber)}
 .plan .tick{
   width:36px;height:36px;border-radius:50%;border:none;flex:none;
@@ -209,9 +212,41 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 .pcard:active{transform:scale(.985)}
 .pcard .tile{width:40px;height:40px;border-radius:14px;font-size:19px}
 .pcard .pc-body{flex:1;min-width:0}
-.pcard .pc-top{font-size:15px}
+.pcard .pc-top{font-size:14px;color:var(--muted);margin-top:2px}
 .pcard .pc-sub{font-size:12.5px;color:var(--muted);margin-top:2px}
 .pcard .pc-sub.due{color:var(--amber)}
+.pcard .pc-date{font-size:16px;font-weight:600}
+.pcard .pc-date.due{color:var(--amber)}
+.pcard .pc-ingr{font-size:12.5px;color:var(--clay);margin-top:3px}
+#careList .pcard:first-child{margin-top:0}
+#careList .empty{display:block;padding:4px 0}
+
+/* ---------- выбор значка ---------- */
+.toggle-btn{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.toggle-btn .num{margin-left:auto;font-size:12.5px;color:var(--muted)}
+#fertToggle, #backupToggle{background:var(--card)}
+#fertToggle:active, #backupToggle:active{background:var(--sage-pale)}
+#backupText{font-size:12px;font-family:ui-monospace,Menlo,Consolas,monospace}
+#importFile{padding:9px 12px;font-size:14px}
+.toggle-btn .chev{font-size:15px;color:var(--muted);transition:transform .2s ease}
+.toggle-btn.open .chev{transform:rotate(90deg)}
+
+.picker-toggle{
+  display:flex;align-items:center;gap:8px;width:100%;
+  background:none;border:none;padding:12px 0 6px;color:var(--muted);font-size:13.5px;
+}
+.picker-toggle .cur{font-size:20px;line-height:1}
+.picker-toggle .chev{margin-left:auto;font-size:13px;transition:transform .2s ease}
+.picker-toggle.open .chev{transform:rotate(90deg)}
+.icons{display:flex;flex-wrap:wrap;gap:8px}
+.icons button{
+  width:46px;height:46px;border-radius:15px;font-size:22px;
+  border:1px solid var(--line);background:var(--bg);line-height:1;
+  transition:transform .12s ease;
+}
+.icons button:active{transform:scale(.92)}
+.icons button.on{border:2px solid var(--sage);background:var(--sage-pale)}
+.sect-hint{font-size:13px;color:var(--muted);margin:-4px 0 2px}
 
 .toast{
   position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
@@ -249,6 +284,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
   </header>
 
   <div class="sect"><span>🌱</span><span id="plantsTitle">Растения</span><span class="num" id="plantsCount"></span></div>
+  <div class="sect-hint">Капля справа — отметка полива, второе нажатие её снимает. Нажатие на растение открывает его целиком.</div>
   <div id="cards"></div>
   <div class="row"><button class="btn ghost" id="addPlant">+ Добавить растение</button></div>
   <div class="block" id="newPlantBox" style="display:none">
@@ -260,27 +296,43 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
     </div>
   </div>
 
-  <div class="sect"><span>💧</span><span id="weekTitle">Полив · неделя</span><span class="num" id="weekCount"></span></div>
-  <div class="week" id="week"></div>
-
-  <div class="sect"><span>🍃</span><span id="monthTitle">Этот месяц</span></div>
-  <div class="stats">
-    <div class="stat"><b id="mWater">0</b><span>поливов</span></div>
-    <div class="stat"><b id="mFeed">0</b><span>подкормок</span></div>
-  </div>
-  <div class="chips" id="mChips"></div>
-
   <div class="sect"><span>🗓</span><span>План подкормок</span><span class="num" id="planCount"></span></div>
   <div id="planCards"></div>
 
-  <div class="sect"><span>🧴</span><span>Мои удобрения</span><span class="num" id="fertCount"></span></div>
-  <div class="block">
+  <div class="row"><button class="btn ghost toggle-btn" id="fertToggle">
+    <span>🧴 Мои удобрения</span><span class="num" id="fertCount"></span><span class="chev">›</span>
+  </button></div>
+  <div class="block" id="fertBox" style="display:none">
     <ul class="flist" id="fertList"></ul>
     <div class="addrow">
       <input id="newFert" placeholder="Название нового удобрения">
       <button class="btn small" id="addFert">Добавить</button>
     </div>
-    <div class="hint">Нажми на удобрение, чтобы вписать его состав и дозировку — дальше они будут подставляться сами.</div>
+    <div class="hint">Нажатие на удобрение открывает его состав и дозировку — дальше они подставляются сами.</div>
+  </div>
+
+  <div class="row"><button class="btn ghost toggle-btn" id="backupToggle">
+    <span>💾 Резервная копия</span><span class="num" id="backupCount"></span><span class="chev">›</span>
+  </button></div>
+  <div class="block" id="backupBox" style="display:none">
+    <div class="row">
+      <button class="btn ghost" id="exportFile">Сохранить файлом</button>
+      <button class="btn ghost" id="exportText">Показать текстом</button>
+    </div>
+
+    <div id="backupTextBox" style="display:none">
+      <label for="backupText">Копия данных</label>
+      <textarea id="backupText" rows="5"></textarea>
+      <div class="row">
+        <button class="btn" id="copyText">Скопировать</button>
+        <button class="btn ghost" id="importText">Восстановить из текста</button>
+      </div>
+      <div class="hint">Текст можно отправить себе в «Избранное» в Telegram — это и будет копия.</div>
+    </div>
+
+    <label for="importFile">Восстановить из файла</label>
+    <input type="file" id="importFile" accept="application/json,.json">
+    <div class="hint">Копия хранит растения, поливы, подкормки, планы и удобрения. Восстановление заменяет всё, что сейчас в приложении.</div>
   </div>
 </div>
 
@@ -289,68 +341,109 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
   <div class="wrap">
     <button class="back" id="back">← К списку</button>
 
-    <div class="plant-head">
+    <div class="plant-head" id="plantHead">
       <div class="tile" id="pTile"></div>
       <div>
         <div class="big" id="pName"></div>
         <div class="sub" id="pSub"></div>
+        <div class="head-hint" id="headHint">↩ Ко всем разделам</div>
       </div>
     </div>
 
-    <button class="btn" id="btnWater">💧 Полила</button>
-    <div class="row"><button class="btn clay" id="btnFeed">🍃 Подкормила</button></div>
+    <button class="btn" id="btnWater">💧 Полив</button>
+    <div class="row" id="feedRow"><button class="btn clay" id="btnFeed">🍃 Подкормка</button></div>
 
-    <div class="block" id="feedForm" style="display:none">
-      <h3>Подкормка</h3>
-      <label for="fName">Удобрение</label>
-      <select id="fName"></select>
-      <div class="addrow" id="newFertRow" style="display:none">
-        <input id="newFertInline" placeholder="Название нового удобрения">
-        <button class="btn small clay" id="addFertInline">Добавить</button>
-      </div>
-      <label for="fIngr">Состав</label>
-      <textarea id="fIngr" placeholder="Например: монофосфат 1 г + аминоцимус 5 мл"></textarea>
-      <label for="fDose">Дозировка на воду</label>
-      <input id="fDose" placeholder="Например: на 1 л">
-      <label for="fDate">Дата</label>
-      <input id="fDate" type="date">
-      <div class="row">
-        <button class="btn clay" id="feedSave">Сохранить подкормку</button>
-        <button class="btn ghost" id="feedCancel">Отмена</button>
-      </div>
-      <div class="hint">Состав и дозировку вписывай свои — каждый раз можно по-новому.</div>
-    </div>
-
-    <div class="block">
-      <h3>План подкормок</h3>
-      <ul class="plan" id="planList"></ul>
-      <label for="planDate">Дата</label>
-      <input id="planDate" type="date">
-      <label for="planFert">Удобрение</label>
-      <select id="planFert"></select>
-      <div class="row"><button class="btn ghost" id="planAdd">Запланировать</button></div>
-      <div class="hint">Галочка переносит запланированную подкормку в историю сегодняшним днём.</div>
-    </div>
-
-    <div class="block">
-      <h3>Уход</h3>
+    <div class="block" id="waterForm" style="display:none">
+      <h3>Полив</h3>
+      <div class="sub" id="waterState"></div>
+      <div class="row"><button class="btn" id="btnWaterToday"></button></div>
+      <label for="nextWaterDate">Следующий полив</label>
+      <input id="nextWaterDate" type="date">
+      <div class="hint">Считается от последнего полива и интервала. Своя дата отменяет расчёт до ближайшей отметки полива.</div>
       <label for="pInterval">Поливать раз в столько дней</label>
       <input id="pInterval" type="number" min="1" max="90">
-      <label for="pTitle">Название</label>
-      <input id="pTitle">
-      <label for="pIcon">Значок</label>
-      <input id="pIcon" maxlength="4" placeholder="🌿">
-      <label for="pNote">Заметка о растении</label>
-      <input id="pNote" placeholder="Например: любит просушку между поливами">
-      <label for="waterDate">Отметить полив другой датой</label>
-      <input id="waterDate" type="date">
-      <div class="row"><button class="btn ghost" id="waterOther">Записать этот полив</button></div>
+      <button class="picker-toggle" id="otherDayToggle" type="button">
+        <span>Записать другим днём</span><span class="chev">›</span>
+      </button>
+      <div id="otherDayBox" style="display:none">
+        <input id="waterDate" type="date">
+        <div class="row"><button class="btn ghost" id="waterOther">Записать этот полив</button></div>
+      </div>
+      <h3 style="margin:18px 0 8px">История поливов</h3>
+      <ul class="log" id="waterLog"></ul>
     </div>
 
-    <div class="block">
-      <h3>История</h3>
+    <div id="feedPanel" style="display:none">
+      <div class="block">
+        <h3>Подкормка</h3>
+        <label for="fDate">Дата</label>
+        <input id="fDate" type="date">
+        <label for="fName">Удобрение</label>
+        <select id="fName"></select>
+        <div class="addrow" id="newFertRow" style="display:none">
+          <input id="newFertInline" placeholder="Название нового удобрения">
+          <button class="btn small clay" id="addFertInline">Добавить</button>
+        </div>
+        <label for="fIngr">Состав</label>
+        <textarea id="fIngr" placeholder="Например: монофосфат 1 г + аминоцимус 5 мл"></textarea>
+        <label for="fDose">Дозировка на воду</label>
+        <input id="fDose" placeholder="Например: на 1 л">
+        <div class="row">
+          <button class="btn clay" id="feedSave">Сохранить подкормку</button>
+          <button class="btn ghost" id="feedCancel">Отмена</button>
+        </div>
+        <div class="hint">Состав и дозировку можно поправить — каждый раз по-своему.</div>
+      </div>
+
+      <div class="row"><button class="btn ghost toggle-btn" id="planToggle">🗓 План подкормок<span class="chev">›</span></button></div>
+      <div class="block" id="planBox" style="display:none">
+        <ul class="plan" id="planList"></ul>
+        <label for="planDate">Дата</label>
+        <input id="planDate" type="date">
+        <label for="planFert">Удобрение</label>
+        <select id="planFert"></select>
+        <label for="planIngr">Состав</label>
+        <textarea id="planIngr" placeholder="Например: монофосфат 1 г + аминоцимус 5 мл"></textarea>
+        <div class="row"><button class="btn ghost" id="planAdd">Запланировать</button></div>
+        <div class="hint">Галочка переносит запланированную подкормку в историю сегодняшним днём.</div>
+      </div>
+
+      <div class="row"><button class="btn ghost toggle-btn" id="feedHistToggle">📜 История подкормок<span class="chev">›</span></button></div>
+      <div class="block" id="feedHistBox" style="display:none">
+        <ul class="log" id="feedLog"></ul>
+      </div>
+    </div>
+
+    <div id="plantExtra">
+    <div class="row"><button class="btn ghost toggle-btn" id="aboutToggle">🌿 О растении<span class="chev">›</span></button></div>
+    <div class="block" id="aboutBox" style="display:none">
+      <label for="pTitle">Название</label>
+      <input id="pTitle" placeholder="Например: Замик">
+      <button class="picker-toggle" id="iconToggle" type="button">
+        <span>Значок</span><span class="cur" id="iconCurrent"></span><span class="chev">›</span>
+      </button>
+      <div id="iconBox" style="display:none">
+        <div class="icons" id="iconPicker"></div>
+        <label for="pIcon">Или свой символ</label>
+        <input id="pIcon" maxlength="4" placeholder="🌿">
+      </div>
+      <label for="pNote">Заметка</label>
+      <input id="pNote" placeholder="Например: любит просушку между поливами">
+      <div class="hint">Всё сохраняется сразу, кнопка не нужна.</div>
+    </div>
+
+    <div class="row"><button class="btn ghost toggle-btn" id="careToggle">🗓 План ухода<span class="chev">›</span></button></div>
+    <div class="block" id="careBox" style="display:none">
+      <div id="careList"></div>
+      <div class="hint">Новые даты ставятся в панели «Подкормка».</div>
+    </div>
+
+    <div class="row"><button class="btn ghost toggle-btn" id="histToggle">📜 История<span class="chev">›</span></button></div>
+    <div class="block" id="histBox" style="display:none">
       <ul class="log" id="log"></ul>
     </div>
+
+    </div><!-- /plantExtra -->
 
     <button class="link danger" id="delPlant">Удалить растение</button>
     <div class="block confirm" id="pConfirm" style="display:none">
@@ -384,7 +477,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
       <textarea id="fEditIngr" placeholder="Например: монофосфат 1 г + аминоцимус 5 мл"></textarea>
       <label for="fEditDose">Дозировка на воду</label>
       <input id="fEditDose" placeholder="Например: на 1 л">
-      <div class="hint">Это подставится само, когда выберешь удобрение в подкормке. Поправить перед сохранением всё равно можно — разово, не меняя карточку.</div>
+      <div class="hint">Это подставляется само при выборе удобрения в подкормке. Разовую правку перед сохранением карточка не запоминает.</div>
     </div>
 
     <button class="link danger" id="fDelete">Удалить удобрение</button>
@@ -449,6 +542,7 @@ function build(){
       tint: p.tint || TINTS[i % TINTS.length],
       note: (r.note !== undefined ? r.note : (p.note || '')),
       interval: r.interval || p.interval || (cfg.app && cfg.app.defaultInterval) || 12,
+      nextWater: r.nextWater || '',
       waterings: r.waterings,
       feedings: r.feedings,
       plan: r.plan
@@ -500,17 +594,28 @@ const T = k => (cfg.texts && cfg.texts[k]) || '';
 /* ================= состояние растения ================= */
 const lastWater = p => p.waterings.length ? p.waterings.slice().sort().pop() : null;
 
+/* дата следующего полива: своя, если поставлена, иначе от интервала */
+function nextWaterDate(p){
+  if (p.nextWater) return p.nextWater;
+  const lw = lastWater(p);
+  if (!lw) return null;
+  const d = new Date(lw + 'T00:00');
+  d.setDate(d.getDate() + p.interval);
+  return iso(d);
+}
+
 function state(p){
   const lw = lastWater(p);
-  if (!lw) return {left:0, due:true, text:T('neverWatered'), fill:1};
-  const since = daysBetween(lw, today());
-  const left = p.interval - since;
+  const nd = nextWaterDate(p);
+  if (!nd) return {left:0, due:true, text:T('neverWatered'), fill:1, next:null};
+  const left = daysBetween(today(), nd);
+  const total = lw ? Math.max(1, daysBetween(lw, nd)) : p.interval;
   return {
-    left, due:left <= 0,
+    left, due:left <= 0, next:nd,
     text: left <= 0 ? T('dueBadge')
         : left === 1 ? T('tomorrowBadge')
         : 'полить через ' + left + ' ' + plural(left, ['день','дня','дней']),
-    fill: Math.min(1, since / p.interval)
+    fill: Math.min(1, Math.max(0, (total - left) / total))
   };
 }
 const wateredToday = p => p.waterings.includes(today());
@@ -538,7 +643,7 @@ function doPlan(plantId, entry){
   r.feedings.push({
     date: today(),
     name: entry.name,
-    ingredients: f ? (f.ingredients || '') : '',
+    ingredients: entry.ingredients || (f ? (f.ingredients || '') : ''),
     dose: f ? (f.dose || '') : ''
   });
   r.plan = r.plan.filter(e => !(e.date === entry.date && e.name === entry.name));
@@ -628,12 +733,18 @@ function renderCards(){
 
     const q = el.querySelector('.quick');
     q.textContent = wateredToday(p) ? '✓' : '💧';
-    q.title = 'Отметить полив сегодня';
+    q.title = wateredToday(p) ? 'Снять отметку полива' : 'Отметить полив сегодня';
     q.onclick = e => {
       e.stopPropagation();
       const r = rec(p.id);
-      if (r.waterings.includes(today())){ toast('Сегодня уже полито'); return; }
+      if (r.waterings.includes(today())){          // второе нажатие снимает отметку
+        r.waterings = r.waterings.filter(d => d !== today());
+        writeStore(); build(); renderHome();
+        toast('Отметка полива снята — ' + p.name);
+        return;
+      }
       r.waterings.push(today()); r.waterings.sort();
+      r.nextWater = '';
       writeStore(); build(); renderHome(); haptic();
       toast(p.name + ' полит');
     };
@@ -645,55 +756,19 @@ function renderCards(){
   });
 }
 
-function renderWeek(){
-  document.getElementById('weekTitle').textContent = T('weekTitle') || 'Полив · неделя';
-  const names = ['пн','вт','ср','чт','пт','сб','вс'];
-  const now = new Date();
-  const shift = (now.getDay() + 6) % 7;                 // понедельник — начало недели
-  const monday = new Date(now); monday.setDate(now.getDate() - shift);
-
-  const all = new Set();
-  plants.forEach(p => p.waterings.forEach(d => all.add(d)));
-
-  const box = document.getElementById('week');
-  box.innerHTML = '';
-  let hits = 0;
-  for (let i = 0; i < 7; i++){
-    const d = new Date(monday); d.setDate(monday.getDate() + i);
-    const key = iso(d), on = all.has(key);
-    if (on) hits++;
-    const el = document.createElement('div');
-    el.className = 'day' + (on ? ' on' : '') + (key === today() ? ' now' : '');
-    el.innerHTML = '<b></b><span></span>';
-    el.querySelector('b').textContent = d.getDate();
-    el.querySelector('span').textContent = names[i];
-    box.appendChild(el);
-  }
-  document.getElementById('weekCount').textContent = hits + ' ' + plural(hits, ['день','дня','дней']) + ' с поливом';
-}
 
 function renderPlanCards(){
   const box = document.getElementById('planCards');
   const list = allPlan();
   const dueCount = list.filter(x => planWhen(x.entry.date).due).length;
   document.getElementById('planCount').textContent =
-    list.length ? (dueCount ? dueCount + ' ждут' : 'ближайшая ' + planWhen(list[0].entry.date).text) : 'пусто';
-
-  // строка-напоминание под шапкой
-  const sp = document.getElementById('statusPlan');
-  const due = list.filter(x => planWhen(x.entry.date).due);
-  if (due.length){
-    sp.style.display = 'flex';
-    sp.innerHTML = '<span class="ic">🗓</span><span class="tx"></span>';
-    sp.querySelector('.tx').textContent = 'Подкормить: ' +
-      due.map(x => x.plant.name + ' — ' + x.entry.name).join(', ');
-  } else {
-    sp.style.display = 'none';
-  }
+    !list.length ? 'пусто'
+    : dueCount ? dueCount + ' ' + plural(dueCount, ['ждёт','ждут','ждут'])
+    : 'ближайшая ' + planWhen(list[0].entry.date).text;
 
   box.innerHTML = '';
   if (!list.length){
-    box.innerHTML = '<div class="block"><span class="empty">Планов пока нет. Открой растение и поставь дату подкормки.</span></div>';
+    box.innerHTML = '<div class="block"><span class="empty">Планов пока нет. Даты ставятся внутри растения, в подкормке.</span></div>';
     return;
   }
   list.slice(0, 6).forEach(({plant, entry}) => {
@@ -702,12 +777,19 @@ function renderPlanCards(){
     el.className = 'pcard';
     el.innerHTML =
       '<div class="tile t-' + plant.tint + '"></div>' +
-      '<div class="pc-body"><div class="pc-top"></div><div class="pc-sub' + (w.due ? ' due' : '') + '"></div></div>' +
+      '<div class="pc-body">' +
+        '<div class="pc-date' + (w.due ? ' due' : '') + '"></div>' +
+        '<div class="pc-top"></div>' +
+        '<div class="pc-sub' + (w.due ? ' due' : '') + '"></div>' +
+        (entry.ingredients ? '<div class="pc-ingr"></div>' : '') +
+      '</div>' +
       '<button class="tick" title="Отметить выполненной">✓</button>';
     el.querySelector('.tile').textContent = plant.icon;
+    el.querySelector('.pc-date').textContent =
+      new Date(entry.date+'T00:00').toLocaleDateString('ru-RU', {day:'numeric', month:'long'});
     el.querySelector('.pc-top').textContent = plant.name + ' · ' + entry.name;
-    el.querySelector('.pc-sub').textContent =
-      new Date(entry.date+'T00:00').toLocaleDateString('ru-RU', {day:'numeric', month:'long'}) + ' · ' + w.text;
+    el.querySelector('.pc-sub').textContent = w.text;
+    if (entry.ingredients) el.querySelector('.pc-ingr').textContent = entry.ingredients;
     el.querySelector('.tick').onclick = e => {
       e.stopPropagation();
       doPlan(plant.id, entry);
@@ -718,30 +800,100 @@ function renderPlanCards(){
   });
 }
 
-function renderMonth(){
-  document.getElementById('monthTitle').textContent = T('monthTitle') || 'Этот месяц';
-  const m = today().slice(0,7);
-  let water = 0, feed = 0;
-  const used = new Set();
-  plants.forEach(p => {
-    water += p.waterings.filter(d => d.slice(0,7) === m).length;
-    p.feedings.filter(f => f.date.slice(0,7) === m).forEach(f => { feed++; used.add(f.name); });
-  });
-  document.getElementById('mWater').textContent = water;
-  document.getElementById('mFeed').textContent = feed;
+/* ---------- резервная копия ---------- */
+let backupOpen = false;
 
-  const chips = document.getElementById('mChips');
-  chips.innerHTML = '';
-  used.forEach(name => {
-    const c = document.createElement('span');
-    c.className = 'chip'; c.textContent = name;
-    chips.appendChild(c);
+function backupPayload(){
+  return JSON.stringify({app:'rasteniya', version:1, savedAt:new Date().toISOString(), data:saved}, null, 2);
+}
+
+function renderBackup(){
+  document.getElementById('backupBox').style.display = backupOpen ? 'block' : 'none';
+  document.getElementById('backupToggle').classList.toggle('open', backupOpen);
+  const n = plants.length;
+  const cnt = plants.reduce((s,p) => s + p.waterings.length + p.feedings.length, 0);
+  document.getElementById('backupCount').textContent =
+    n + ' ' + plural(n, ['растение','растения','растений']) + ', ' +
+    cnt + ' ' + plural(cnt, ['запись','записи','записей']);
+}
+
+function applyBackup(text){
+  let obj;
+  try{ obj = JSON.parse(text); }
+  catch(e){ toast('Не похоже на копию: текст не читается'); return; }
+  const d = obj && obj.data ? obj.data : obj;
+  if (!d || typeof d !== 'object' || !d.records){ toast('В копии нет данных приложения'); return; }
+  askConfirm('Заменить текущие данные копией? Всё, что сейчас в приложении, будет перезаписано.', () => {
+    saved = Object.assign({records:{}, extraPlants:[], fertList:[], seenBase:[], deleted:[]}, d);
+    writeStore(); build(); renderHome();
+    toast('Данные восстановлены');
   });
 }
 
+document.getElementById('backupToggle').onclick = () => { backupOpen = !backupOpen; renderBackup(); };
+
+document.getElementById('exportFile').onclick = () => {
+  const blob = new Blob([backupPayload()], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'rasteniya-' + today() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast('Файл копии сохранён');
+};
+
+document.getElementById('exportText').onclick = () => {
+  const box = document.getElementById('backupTextBox');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  document.getElementById('backupText').value = backupPayload();
+};
+
+document.getElementById('copyText').onclick = async () => {
+  const ta = document.getElementById('backupText');
+  try{
+    await navigator.clipboard.writeText(ta.value);
+    toast('Копия в буфере обмена');
+  }catch(e){
+    ta.select();
+    toast('Текст выделен — скопировать вручную');
+  }
+};
+
+document.getElementById('importText').onclick = () => {
+  const v = document.getElementById('backupText').value.trim();
+  if (!v){ toast('Вставить текст копии в поле'); return; }
+  applyBackup(v);
+};
+
+document.getElementById('importFile').onchange = e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = () => { applyBackup(String(r.result)); e.target.value = ''; };
+  r.onerror = () => toast('Файл не прочитался');
+  r.readAsText(file);
+};
+
+/* строка-напоминание под шапкой: что пора подкормить */
+function renderPlanStatus(){
+  const due = allPlan().filter(x => planWhen(x.entry.date).due);
+  const sp = document.getElementById('statusPlan');
+  if (!due.length){ sp.style.display = 'none'; return; }
+  sp.style.display = 'flex';
+  sp.innerHTML = '<span class="ic">🗓</span><span class="tx"></span>';
+  sp.querySelector('.tx').textContent = 'Подкормить: ' +
+    due.map(x => x.plant.name + ' — ' + x.entry.name).join(', ');
+}
+
+
 const fertBy = name => fertilizers.find(f => f.name === name) || null;
 
+let fertOpen = false;
+
 function renderFerts(){
+  document.getElementById('fertBox').style.display = fertOpen ? 'block' : 'none';
+  document.getElementById('fertToggle').classList.toggle('open', fertOpen);
   const box = document.getElementById('fertList');
   document.getElementById('fertCount').textContent = fertilizers.length + ' ' +
     plural(fertilizers.length, ['штука','штуки','штук']);
@@ -765,7 +917,7 @@ function renderFerts(){
 
 function addFert(value){
   const v = (value || '').trim();
-  if (!v){ toast('Впиши название'); return false; }
+  if (!v){ toast('Нужно название'); return false; }
   if (fertilizers.some(f => f.name.toLowerCase() === v.toLowerCase())){ toast('Такое уже есть'); return false; }
   saved.fertList.push({name:v, ingredients:'', dose:''});
   writeStore(); build();
@@ -787,6 +939,7 @@ function openFert(name){
 function closeFert(){
   document.getElementById('fertScreen').classList.remove('open');
   currentFert = null;
+  fertOpen = true;
   renderHome();
 }
 function renderFert(){
@@ -841,14 +994,17 @@ function renderHome(){
   document.getElementById('appTitle').textContent = (cfg.app && cfg.app.title) || 'Мои растения';
   document.getElementById('todayLine').textContent =
     new Date().toLocaleDateString('ru-RU', {weekday:'long', day:'numeric', month:'long'});
-  renderHero(); renderStatus(); renderCards(); renderPlanCards(); renderWeek(); renderMonth(); renderFerts();
+  renderHero(); renderStatus(); renderCards(); renderPlanCards(); renderPlanStatus(); renderFerts(); renderBackup();
 }
 
 /* ================= экран растения ================= */
 function openPlant(id){
   current = plants.find(p => p.id === id);
   document.getElementById('plantScreen').classList.add('open');
-  document.getElementById('feedForm').style.display = 'none';
+  setPanel(null);
+  ['aboutBox','histBox'].forEach(id => document.getElementById(id).style.display = 'none');
+  ['aboutToggle','histToggle'].forEach(id => document.getElementById(id).classList.remove('open'));
+  keepCareOpen();          // план ухода открыт сразу — главное видно без нажатий
   document.getElementById('pConfirm').style.display = 'none';
   window.scrollTo(0,0);
   renderPlant();
@@ -857,6 +1013,24 @@ function closePlant(){
   document.getElementById('plantScreen').classList.remove('open');
   current = null;
   renderHome();
+}
+
+const ICONS = ['🌿','🪴','🌱','🌵','🎋','🌴','🌳','🍀','🌾','🌺','🌸','🌻','🪷','🍃','🌼','🌹'];
+
+function renderIconPicker(){
+  const box = document.getElementById('iconPicker');
+  box.innerHTML = '';
+  ICONS.forEach(ic => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = ic;
+    if (ic === current.icon) b.className = 'on';
+    b.onclick = () => {
+      rec(current.id).icon = ic;
+      refresh(current.id);
+    };
+    box.appendChild(b);
+  });
 }
 
 function renderPlant(){
@@ -869,10 +1043,14 @@ function renderPlant(){
 
   document.getElementById('pInterval').value = p.interval;
   document.getElementById('pTitle').value = p.name;
-  document.getElementById('pIcon').value = p.icon;
+  document.getElementById('pIcon').value = ICONS.includes(p.icon) ? '' : p.icon;
+  document.getElementById('iconCurrent').textContent = p.icon;
+  document.getElementById('iconBox').style.display = 'none';       // палитра закрыта, пока не позовут
+  document.getElementById('iconToggle').classList.remove('open');
+  renderIconPicker();
   document.getElementById('pNote').value = p.note || '';
-  document.getElementById('waterDate').value = today();
   document.getElementById('fDate').value = today();
+  document.getElementById('waterDate').value = today();
 
   const sel = document.getElementById('fName');
   const keep = sel.value;
@@ -887,6 +1065,121 @@ function renderPlant(){
   if (fertBy(keep)) sel.value = keep;
   fillFeedFields(sel.value);
 
+  // панель полива
+  const ws = state(p);
+  let wtxt = (lw ? 'Последний полив ' + human(lw) + ' · ' : '') + ws.text;
+  if (ws.next)
+    wtxt += ' · ' + new Date(ws.next + 'T00:00').toLocaleDateString('ru-RU', {day:'numeric', month:'long'});
+  document.getElementById('waterState').textContent = wtxt;
+  document.getElementById('nextWaterDate').value = ws.next || '';
+  const bt = document.getElementById('btnWaterToday');
+  bt.textContent = wateredToday(p) ? '↩ Снять отметку за сегодня' : '💧 Отметить полив сегодня';
+  bt.className = wateredToday(p) ? 'btn ghost' : 'btn';
+
+  const wl = document.getElementById('waterLog');
+  wl.innerHTML = '';
+  const wdates = p.waterings.slice().sort().reverse();
+  if (!wdates.length){
+    wl.innerHTML = '<li class="empty">Поливов пока нет.</li>';
+  } else {
+    wdates.forEach(date => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="dot"></span><span><span class="what"></span><br>' +
+                     '<span class="when"></span></span><button class="del" title="Удалить запись">×</button>';
+      li.querySelector('.what').textContent =
+        new Date(date+'T00:00').toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
+      li.querySelector('.when').textContent = human(date);
+      li.querySelector('.del').onclick = () => {
+        const r = rec(p.id);
+        r.waterings = r.waterings.filter(d => d !== date);
+        refresh(p.id); toast('Запись удалена');
+        setPanel('water');
+      };
+      wl.appendChild(li);
+    });
+  }
+
+  // план ухода — полив и подкормки одним списком, по датам
+  const cl = document.getElementById('careList');
+  cl.innerHTML = '';
+  const care = planSorted(p).map(entry => ({type:'feed', date:entry.date, entry}));
+  const ws2 = state(p);
+  if (ws2.next) care.push({type:'water', date:ws2.next});
+  care.sort((a,b) => a.date < b.date ? -1 : 1);
+
+  if (!care.length){
+    cl.innerHTML = '<div class="empty">Пока ничего не запланировано.</div>';
+  } else {
+    care.forEach(item => {
+      const w = planWhen(item.date);
+      const isWater = item.type === 'water';
+      const entry = item.entry;
+      const el = document.createElement('div');
+      el.className = 'pcard';
+      el.innerHTML =
+        '<div class="tile ' + (isWater ? 't-mint' : 't-' + p.tint) + '">' + (isWater ? '💧' : '🍃') + '</div>' +
+        '<div class="pc-body"><div class="pc-top"></div>' +
+        '<div class="pc-sub' + (w.due ? ' due' : '') + '"></div>' +
+        (!isWater && entry.ingredients ? '<div class="pc-ingr"></div>' : '') + '</div>' +
+        '<button class="tick" title="Отметить выполненным">✓</button>' +
+        (isWater ? '' : '<button class="icon-btn" title="Убрать из плана">✕</button>');
+
+      el.querySelector('.pc-top').textContent =
+        new Date(item.date+'T00:00').toLocaleDateString('ru-RU', {day:'numeric', month:'long'}) +
+        ' — ' + (isWater ? 'Полив' : entry.name);
+      el.querySelector('.pc-sub').textContent = w.text;
+      if (!isWater && entry.ingredients) el.querySelector('.pc-ingr').textContent = entry.ingredients;
+
+      el.querySelector('.tick').onclick = () => {
+        const r = rec(p.id);
+        if (isWater){
+          if (!r.waterings.includes(today())){ r.waterings.push(today()); r.waterings.sort(); }
+          r.nextWater = '';
+          refresh(p.id); keepCareOpen(); haptic(); toast('Полив записан');
+        } else {
+          doPlan(p.id, entry); refresh(p.id); keepCareOpen();
+        }
+      };
+      const del = el.querySelector('.icon-btn');
+      if (del) del.onclick = () => {
+        const r = rec(p.id);
+        r.plan = r.plan.filter(e => !(e.date === entry.date && e.name === entry.name));
+        refresh(p.id); keepCareOpen(); toast('Убрано из плана');
+      };
+      cl.appendChild(el);
+    });
+  }
+
+  // история подкормок
+  const fl = document.getElementById('feedLog');
+  fl.innerHTML = '';
+  const feeds = p.feedings.slice().sort((a,b) => a.date < b.date ? 1 : -1);
+  if (!feeds.length){
+    fl.innerHTML = '<li class="empty">Подкормок пока нет.</li>';
+  } else {
+    feeds.forEach(f => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="dot feed"></span><span><span class="what"></span><br>' +
+                     '<span class="when"></span></span><button class="del" title="Удалить запись">×</button>';
+      let what = f.name;
+      if (f.ingredients) what += '\n' + f.ingredients;
+      if (f.dose) what += ' · ' + f.dose;
+      li.querySelector('.what').textContent = what;
+      li.querySelector('.when').textContent =
+        new Date(f.date+'T00:00').toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
+      li.querySelector('.del').onclick = () => {
+        const r = rec(p.id);
+        const i = r.feedings.indexOf(f);
+        if (i > -1) r.feedings.splice(i, 1);
+        refresh(p.id); setPanel('feed');
+        document.getElementById('feedHistBox').style.display = 'block';
+        document.getElementById('feedHistToggle').classList.add('open');
+        toast('Запись удалена');
+      };
+      fl.appendChild(li);
+    });
+  }
+
   // план подкормок
   const pf = document.getElementById('planFert');
   const keepPlan = pf.value;
@@ -896,6 +1189,9 @@ function renderPlant(){
     o.value = f.name; o.textContent = f.name; pf.appendChild(o);
   });
   if (fertBy(keepPlan)) pf.value = keepPlan;
+  const pfSel = fertBy(pf.value);
+  if (!document.getElementById('planIngr').value)
+    document.getElementById('planIngr').value = pfSel ? (pfSel.ingredients || '') : '';
   if (!document.getElementById('planDate').value){
     const d = new Date(); d.setDate(d.getDate() + 14);
     document.getElementById('planDate').value = iso(d);
@@ -913,16 +1209,19 @@ function renderPlant(){
       li.innerHTML =
         '<button class="tick" title="Отметить выполненной">✓</button>' +
         '<span class="pl-body"><span class="pl-name"></span>' +
-        '<span class="pl-when' + (w.due ? ' due' : '') + '"></span></span>' +
+        '<span class="pl-when' + (w.due ? ' due' : '') + '"></span>' +
+        (entry.ingredients ? '<span class="pl-ingr"></span>' : '') + '</span>' +
         '<button class="icon-btn" title="Убрать из плана">✕</button>';
-      li.querySelector('.pl-name').textContent = entry.name;
-      li.querySelector('.pl-when').textContent =
-        new Date(entry.date+'T00:00').toLocaleDateString('ru-RU', {day:'numeric', month:'long'}) + ' · ' + w.text;
+      li.querySelector('.pl-name').textContent =
+        new Date(entry.date+'T00:00').toLocaleDateString('ru-RU', {day:'numeric', month:'long'}) +
+        ' — ' + entry.name;
+      li.querySelector('.pl-when').textContent = w.text;
+      if (entry.ingredients) li.querySelector('.pl-ingr').textContent = entry.ingredients;
       li.querySelector('.tick').onclick = () => { doPlan(p.id, entry); refresh(p.id); };
       li.querySelector('.icon-btn').onclick = () => {
         const r = rec(p.id);
         r.plan = r.plan.filter(e => !(e.date === entry.date && e.name === entry.name));
-        refresh(p.id); toast('Убрала из плана');
+        refresh(p.id); toast('Убрано из плана');
       };
       pl.appendChild(li);
     });
@@ -983,24 +1282,100 @@ function addWatering(date){
   const r = rec(current.id);
   if (r.waterings.includes(date)){ toast('Этот полив уже записан'); return; }
   r.waterings.push(date); r.waterings.sort();
+  r.nextWater = '';
   refresh(current.id); haptic();
   toast(date === today() ? 'Полив записан' : 'Полив записан на ' + human(date));
 }
 
-document.getElementById('btnWater').onclick = () => addWatering(today());
-document.getElementById('waterOther').onclick = () => addWatering(document.getElementById('waterDate').value || today());
+/* открыта либо панель полива, либо подкормки, либо ничего;
+   пока панель открыта, остальные блоки не мешают */
+function setPanel(which){
+  const w = document.getElementById('waterForm');
+  const f = document.getElementById('feedPanel');
+  w.style.display = which === 'water' ? 'block' : 'none';
+  f.style.display = which === 'feed'  ? 'block' : 'none';
+  document.getElementById('plantExtra').style.display = which ? 'none' : 'block';
+  document.getElementById('plantHead').classList.toggle('tappable', !!which);
+  if (which !== 'feed'){
+    ['planBox','feedHistBox'].forEach(id => document.getElementById(id).style.display = 'none');
+    ['planToggle','feedHistToggle'].forEach(id => document.getElementById(id).classList.remove('open'));
+  }
+  // открыта одна тема — вторая кнопка не мешает
+  document.getElementById('feedRow').style.display  = which === 'water' ? 'none' : 'flex';
+  document.getElementById('btnWater').style.display = which === 'feed'  ? 'none' : 'block';
+  document.getElementById('otherDayBox').style.display = 'none';
+  if (which !== 'feed') document.getElementById('newFertRow').style.display = 'none';
+}
+const panelOpen = id => document.getElementById(id).style.display === 'block';
+
+document.getElementById('btnWater').onclick = () => {
+  setPanel(panelOpen('waterForm') ? null : 'water');
+};
+
+/* отметить или снять сегодняшний полив */
+document.getElementById('btnWaterToday').onclick = () => {
+  const r = rec(current.id);
+  if (r.waterings.includes(today())){
+    r.waterings = r.waterings.filter(d => d !== today());
+    refresh(current.id);
+    toast('Отметка полива снята');
+  } else {
+    r.waterings.push(today()); r.waterings.sort();
+    r.nextWater = '';
+    refresh(current.id); haptic();
+    toast('Полив записан');
+  }
+  setPanel('water');
+};
+document.getElementById('nextWaterDate').onchange = e => {
+  rec(current.id).nextWater = e.target.value || '';
+  refresh(current.id); setPanel('water');
+  toast(e.target.value ? 'Дата следующего полива сохранена' : 'Дата снова считается по интервалу');
+};
+
+document.getElementById('otherDayToggle').onclick = () => {
+  const box = document.getElementById('otherDayBox');
+  const open = box.style.display === 'none';
+  box.style.display = open ? 'block' : 'none';
+  document.getElementById('otherDayToggle').classList.toggle('open', open);
+};
+document.getElementById('waterOther').onclick = () => {
+  addWatering(document.getElementById('waterDate').value || today());
+  setPanel('water');
+};
+
+function keepCareOpen(){
+  document.getElementById('careBox').style.display = 'block';
+  document.getElementById('careToggle').classList.add('open');
+}
+function toggleBox(btnId, boxId){
+  const b = document.getElementById(btnId), box = document.getElementById(boxId);
+  const open = box.style.display === 'none';
+  box.style.display = open ? 'block' : 'none';
+  b.classList.toggle('open', open);
+}
+document.getElementById('aboutToggle').onclick = () => toggleBox('aboutToggle', 'aboutBox');
+document.getElementById('planToggle').onclick = () => toggleBox('planToggle', 'planBox');
+document.getElementById('planFert').onchange = e => {
+  const f = fertBy(e.target.value);
+  document.getElementById('planIngr').value = f ? (f.ingredients || '') : '';
+};
+document.getElementById('feedHistToggle').onclick = () => toggleBox('feedHistToggle', 'feedHistBox');
+document.getElementById('careToggle').onclick  = () => toggleBox('careToggle', 'careBox');
+document.getElementById('histToggle').onclick  = () => toggleBox('histToggle', 'histBox');
+
+document.getElementById('plantHead').onclick = () => {
+  if (panelOpen('waterForm') || panelOpen('feedPanel')) setPanel(null);
+};
+
 document.getElementById('back').onclick = closePlant;
 
 document.getElementById('btnFeed').onclick = () => {
-  const box = document.getElementById('feedForm');
-  box.style.display = 'block';
+  if (panelOpen('feedPanel')){ setPanel(null); return; }
+  setPanel('feed');
   fillFeedFields(document.getElementById('fName').value);
-  box.scrollIntoView({behavior:'smooth', block:'center'});
 };
-document.getElementById('feedCancel').onclick = () => {
-  document.getElementById('feedForm').style.display = 'none';
-  document.getElementById('newFertRow').style.display = 'none';
-};
+document.getElementById('feedCancel').onclick = () => setPanel(null);
 
 function fillFeedFields(name){
   const f = fertBy(name);
@@ -1027,25 +1402,31 @@ document.getElementById('addFertInline').onclick = () => {
   inp.value = '';
   document.getElementById('newFertRow').style.display = 'none';
   renderPlant();
+  setPanel('feed');
   document.getElementById('fName').value = v;
   fillFeedFields(v);
 };
 
+document.getElementById('fertToggle').onclick = () => {
+  fertOpen = !fertOpen;
+  renderFerts();
+};
+
 document.getElementById('addFert').onclick = () => {
   const inp = document.getElementById('newFert');
-  if (addFert(inp.value)) { inp.value = ''; renderHome(); }
+  if (addFert(inp.value)) { inp.value = ''; fertOpen = true; renderHome(); }
 };
 
 document.getElementById('feedSave').onclick = () => {
   const name = document.getElementById('fName').value;
-  if (!name || name === '__new'){ toast('Выбери удобрение'); return; }
+  if (!name || name === '__new'){ toast('Не выбрано удобрение'); return; }
   rec(current.id).feedings.push({
     date: document.getElementById('fDate').value || today(),
     name,
     ingredients: document.getElementById('fIngr').value.trim(),
     dose: document.getElementById('fDose').value.trim()
   });
-  document.getElementById('feedForm').style.display = 'none';
+  setPanel(null);
   refresh(current.id); haptic();
   toast('Подкормка записана');
 };
@@ -1054,6 +1435,13 @@ document.getElementById('pInterval').onchange = e => {
   const v = parseInt(e.target.value, 10);
   if (v > 0 && v < 366){ rec(current.id).interval = v; refresh(current.id); toast('Интервал сохранён'); }
 };
+document.getElementById('iconToggle').onclick = () => {
+  const box = document.getElementById('iconBox');
+  const open = box.style.display === 'none';
+  box.style.display = open ? 'block' : 'none';
+  document.getElementById('iconToggle').classList.toggle('open', open);
+};
+
 document.getElementById('pTitle').onchange = e => {
   const v = e.target.value.trim();
   if (v){ rec(current.id).name = v; refresh(current.id); }
@@ -1070,12 +1458,16 @@ document.getElementById('pNote').onchange = e => {
 document.getElementById('planAdd').onclick = () => {
   const date = document.getElementById('planDate').value;
   const name = document.getElementById('planFert').value;
-  if (!date){ toast('Выбери дату'); return; }
-  if (!name){ toast('Выбери удобрение'); return; }
+  if (!date){ toast('Не выбрана дата'); return; }
+  if (!name){ toast('Не выбрано удобрение'); return; }
   const r = rec(current.id);
   if (r.plan.some(e => e.date === date && e.name === name)){ toast('Такая подкормка уже в плане'); return; }
-  r.plan.push({date, name});
+  r.plan.push({date, name, ingredients: document.getElementById('planIngr').value.trim()});
+  document.getElementById('planIngr').value = '';
   refresh(current.id); haptic();
+  setPanel('feed');
+  document.getElementById('planBox').style.display = 'block';
+  document.getElementById('planToggle').classList.add('open');
   toast('Подкормка запланирована');
 };
 
@@ -1110,7 +1502,7 @@ document.getElementById('newPlantCancel').onclick = () => {
 document.getElementById('newPlantSave').onclick = () => {
   const inp = document.getElementById('newPlantName');
   const name = inp.value.trim();
-  if (!name){ toast('Впиши название'); return; }
+  if (!name){ toast('Нужно название'); return; }
   saved.extraPlants.push({
     id: 'own_' + Date.now(),
     name,
