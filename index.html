@@ -223,6 +223,8 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 .pcard .pc-sub{font-size:12.5px;color:var(--muted);margin-top:2px}
 .pcard .pc-sub.due{color:var(--amber)}
 .pcard .pc-date{font-size:16px;font-weight:600}
+.pcard .pc-plant{font-weight:600;color:var(--ink);font-size:14.5px}
+.pcard .pc-fert{color:var(--muted)}
 .pcard .pc-date.due{color:var(--amber)}
 .pcard .pc-ingr{font-size:12.5px;color:var(--clay);margin-top:3px}
 #careList .pcard:first-child{margin-top:0}
@@ -729,7 +731,6 @@ function renderCards(){
 
   plants.forEach(p => {
     const s = state(p), lw = lastWater(p);
-    const lf = p.feedings.length ? p.feedings.slice().sort((a,b)=>a.date<b.date?1:-1)[0] : null;
     const el = document.createElement('div');
     el.className = 'card';
     el.innerHTML =
@@ -738,8 +739,7 @@ function renderCards(){
         '<div class="name"></div>' +
         '<div class="meta"></div>' +
         '<div class="bar' + (s.due ? ' due' : '') + '"><i></i></div>' +
-        (lf ? '<div class="feed-note"></div>' : '') +
-        (planSorted(p).length ? '<div class="plan-note"></div>' : '') +
+
         (p.note ? '<div class="note"></div>' : '') +
       '</div>' +
       '<button class="quick' + (wateredToday(p) ? ' done' : (s.due ? ' due' : '')) + '"></button>';
@@ -749,14 +749,6 @@ function renderCards(){
     const meta = el.querySelector('.meta');
     if (s.due){ meta.innerHTML = '<b></b>'; meta.querySelector('b').textContent = s.text; }
     else meta.textContent = (lw ? 'полив ' + human(lw) + ' · ' : '') + s.text;
-    if (lf) el.querySelector('.feed-note').textContent = '🍃 ' + lf.name + ' — ' + human(lf.date);
-    const np = planSorted(p)[0];
-    if (np){
-      const w = planWhen(np.date);
-      const el2 = el.querySelector('.plan-note');
-      el2.textContent = '🗓 ' + np.name + ' — ' + w.text;
-      if (w.due) el2.classList.add('due');
-    }
     if (p.note) el.querySelector('.note').textContent = p.note;
 
     const q = el.querySelector('.quick');
@@ -815,7 +807,10 @@ function renderPlanCards(){
     el.querySelector('.tile').textContent = plant.icon;
     el.querySelector('.pc-date').textContent =
       new Date(entry.date+'T00:00').toLocaleDateString('ru-RU', {day:'numeric', month:'long'});
-    el.querySelector('.pc-top').textContent = plant.name + ' · ' + entry.name;
+    const top = el.querySelector('.pc-top');
+    top.innerHTML = '<span class="pc-plant"></span><span class="pc-fert"></span>';
+    top.querySelector('.pc-plant').textContent = plant.name;
+    top.querySelector('.pc-fert').textContent = ' · ' + entry.name;
     el.querySelector('.pc-sub').textContent = w.text;
     if (entry.ingredients) el.querySelector('.pc-ingr').textContent = entry.ingredients;
     el.querySelector('.tick').onclick = e => {
