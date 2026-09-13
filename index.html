@@ -378,6 +378,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
         <h3>Подкормка</h3>
         <label for="fDate">Дата</label>
         <input id="fDate" type="date">
+        <div class="hint">Сегодня или раньше — запись уйдёт в историю. Дата в будущем — в план подкормок.</div>
         <label for="fName">Удобрение</label>
         <select id="fName"></select>
         <div class="addrow" id="newFertRow" style="display:none">
@@ -530,6 +531,26 @@ function rec(id){
 }
 
 const TINTS = ['green','mint','clay','sand'];
+
+/* подкормка с датой в будущем — это план; переносим такие записи */
+function migrateFutureFeedings(){
+  let moved = 0;
+  Object.keys(saved.records || {}).forEach(id => {
+    const r = saved.records[id];
+    if (!r || !r.feedings) return;
+    const future = r.feedings.filter(f => f.date > today());
+    if (!future.length) return;
+    r.feedings = r.feedings.filter(f => f.date <= today());
+    if (!r.plan) r.plan = [];
+    future.forEach(f => {
+      if (!r.plan.some(e => e.date === f.date && e.name === f.name))
+        r.plan.push({date: f.date, name: f.name, ingredients: f.ingredients || ''});
+    });
+    moved += future.length;
+  });
+  if (moved) writeStore();
+  return moved;
+}
 
 function build(){
   const base = (cfg.plants || []).filter(p => !saved.deleted.includes(p.id));
@@ -825,6 +846,7 @@ function applyBackup(text){
   if (!d || typeof d !== 'object' || !d.records){ toast('В копии нет данных приложения'); return; }
   askConfirm('Заменить текущие данные копией? Всё, что сейчас в приложении, будет перезаписано.', () => {
     saved = Object.assign({records:{}, extraPlants:[], fertList:[], seenBase:[], deleted:[]}, d);
+    migrateFutureFeedings();
     writeStore(); build(); renderHome();
     toast('Данные восстановлены');
   });
@@ -1420,12 +1442,26 @@ document.getElementById('addFert').onclick = () => {
 document.getElementById('feedSave').onclick = () => {
   const name = document.getElementById('fName').value;
   if (!name || name === '__new'){ toast('Не выбрано удобрение'); return; }
-  rec(current.id).feedings.push({
-    date: document.getElementById('fDate').value || today(),
-    name,
-    ingredients: document.getElementById('fIngr').value.trim(),
-    dose: document.getElementById('fDose').value.trim()
-  });
+  const fdate = document.getElementById('fDate').value || today();
+  const ingr  = document.getElementById('fIngr').value.trim();
+  const dose  = document.getElementById('fDose').value.trim();
+  const r = rec(current.id);
+
+  if (fdate > today()){                       // будущая дата — это план, а не факт
+    if (!r.plan.some(e => e.date === fdate && e.name === name))
+      r.plan.push({date: fdate, name, ingredients: ingr});
+    document.getElementById('fIngr').value = '';
+    document.getElementById('fDose').value = '';
+    document.getElementById('fDate').value = today();
+    setPanel('feed');
+    document.getElementById('planBox').style.display = 'block';
+    document.getElementById('planToggle').classList.add('open');
+    refresh(current.id); haptic();
+    toast('Дата в будущем — подкормка ушла в план');
+    return;
+  }
+
+  r.feedings.push({date: fdate, name, ingredients: ingr, dose});
   setPanel(null);
   refresh(current.id); haptic();
   toast('Подкормка записана');
@@ -1541,6 +1577,7 @@ async function loadConfig(){
 
 async function boot(){
   readStore();
+  migrateFutureFeedings();
   try{ start(await loadConfig()); }
   catch(err){ showFallback(err.message); }
 }
