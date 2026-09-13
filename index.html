@@ -56,6 +56,13 @@ h1{font:400 30px/1.15 Georgia,"Times New Roman",serif;margin:5px 0 14px}
   font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
 }
 .sect .num{margin-left:auto;letter-spacing:.02em}
+.sect.accent{
+  color:var(--sage-deep);font-weight:600;font-size:13px;
+  background:var(--sage-pale);border-radius:12px;padding:9px 12px;margin:26px 0 12px;
+}
+.sect.accent .num{color:var(--sage-deep);font-weight:400}
+.sect.accent.feed{background:var(--clay-pale);color:#7A5A3C}
+.sect.accent.feed .num{color:#7A5A3C}
 
 /* ---------- прогресс дня ---------- */
 .segs{display:flex;gap:5px;margin-top:10px}
@@ -283,7 +290,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
     <div class="segs" id="segs"></div>
   </header>
 
-  <div class="sect"><span>🌱</span><span id="plantsTitle">Растения</span><span class="num" id="plantsCount"></span></div>
+  <div class="sect accent"><span>🌱</span><span id="plantsTitle">Растения</span><span class="num" id="plantsCount"></span></div>
   <div class="sect-hint">Капля справа — отметка полива, второе нажатие её снимает. Нажатие на растение открывает его целиком.</div>
   <div id="cards"></div>
   <div class="row"><button class="btn ghost" id="addPlant">+ Добавить растение</button></div>
@@ -296,7 +303,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
     </div>
   </div>
 
-  <div class="sect"><span>🗓</span><span>План подкормок</span><span class="num" id="planCount"></span></div>
+  <div class="sect accent feed"><span>🗓</span><span>План подкормок</span><span class="num" id="planCount"></span></div>
   <div id="planCards"></div>
 
   <div class="row"><button class="btn ghost toggle-btn" id="fertToggle">
